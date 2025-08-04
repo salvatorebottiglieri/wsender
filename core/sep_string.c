@@ -1,11 +1,13 @@
 #include "sep_string.h"
-#include <stdbool.h>
+#include <stdio.h>
 
 String* new_s(const char* data, size_t size){
     String* str = malloc(sizeof(String)+sizeof(char)*size);
     str->data = (char*)str+sizeof(String);
     str->size = size;
-    memcpy(str->data, data, size);
+    for (size_t i = 0; i < size; i++){
+        str->data[i] = data[i];
+    }
     return str;  
 }
 
@@ -25,5 +27,8 @@ String* get_slice(String* string, size_t start, size_t end){
 
 bool equal(String* string1, String* string2){
     if (string1->size != string2->size){return false;}
-    return memcmp(string1->data, string2->data, string1->size) == 0;
+    for (size_t i = 0; i < string1->size; i++){
+        if (string1->data[i] != string2->data[i]){return false;}
+    }
+    return true;
 }

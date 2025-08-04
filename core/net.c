@@ -104,12 +104,13 @@ void* accept_connections(void* arg){
     }
 
     clilen = sizeof(cliaddr);
+
+    while(1){
     connfd = accept(sockfd, (struct sockaddr *)&cliaddr, &clilen);
     if (connfd < 0) {
         perror("accept failed");
         pthread_exit(NULL);
     }
-
     int n = read(connfd, buffer, 255);
     if (n < 0) {
         perror("read failed");
@@ -117,7 +118,9 @@ void* accept_connections(void* arg){
     }
 
     buffer[n] = '\0';
-    printf("Received message: %s\n", buffer);
+    printf("Received message: %s\n", buffer);    
+    }
+
 
     close(connfd);
     close(sockfd);

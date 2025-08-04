@@ -8,7 +8,19 @@
 #include "sep_string.h"
 const char *env;
 
+char* read_user_input(char* buffer){
+    char c;
+    size_t index = 0;
+    do{
+        c = getchar();
+        if (c != EOF && c != '\n'){
+            buffer[index++] = c;
+        }
 
+    }while(c != EOF && c != '\n');
+    buffer[index] = '\0';
+    return buffer;
+}
 
 
 
@@ -19,7 +31,7 @@ int main(int argc, char *argv[]) {
     }else{
         env = "DEBUG";
     }
-    char *buffer[256];
+    
     pthread_t thread;
     
     if (argc < 2){
@@ -34,26 +46,34 @@ int main(int argc, char *argv[]) {
         .name = "receiver",
         .id = "12345678",
         .ip = "127.0.0.1",
-        .port = atoi(argv[1])
+        .port = 8081
     };
     ConnectionParams params = {
         .listen_port = atoi(argv[1])
     };
     int rc;
     rc = pthread_create(&thread, NULL, accept_connections, &params);
+    printf("\n---------------------------------------\nAccepting connections on port: %d\n---------------------------------------\n", atoi(argv[1]));
     if (rc){
         printf("ERROR; return code from pthread_create() is %d\n", rc);
         exit(-1);
     }
+    char *buffer = malloc(256);
+    if (buffer == NULL){
+        printf("Memory allocation failed\n");
+        exit(-1);
+    }
+
     while(1){
 
-        scanf("%s", buffer);
-        if (equal(buffer, "exit") == 0){
+        char* command = read_user_input(buffer);
+        if (strncmp(command, "exit",4) == 0){
+            printf("Exit command received\n");
             break;
         }
-        if (strncmp(buffer, "send", 4) == 0){
-            printf("Sending message: %s\n", buffer + 4);
+        if (strncmp(command, "send", 4) == 0){
             char* message = buffer + 5;
+            printf("Sending message: %s\n", message);
             send_to(&receiver, message);
         }
 
