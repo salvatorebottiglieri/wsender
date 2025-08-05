@@ -77,10 +77,13 @@ int main(int argc, char *argv[]) {
             printf("Exit command received\n");
             break;
         }
-        if (equal(command, send)){
-            char* message = buffer + 5;
-            printf("Sending message: %s\n", message);
+        else if (equal(command, send)){
+            String* message = get_slice(user_input, 5, user_input->size);
+            printf("Sending message: %s\n", to_c_string(message));
             send_to(&receiver, message);
+        }
+        else {
+            printf("Invalid command\n");
         }
 
     }

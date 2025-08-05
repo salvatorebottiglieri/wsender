@@ -2,6 +2,7 @@
 #define NET_H
 
 #include<stdint.h>
+#include "sep_string.h"
 
 typedef struct Peer_{
     char name[256]; //256 bytes
@@ -18,7 +19,7 @@ typedef struct ConnectionParams_{
 
 int connect_to(Peer* peer);
 int is_alive(Peer* peer);
-int send_to(Peer* peer, char* message);
+int send_to(Peer* peer, String* message);
 void* accept_connections(void* arg);
 
 

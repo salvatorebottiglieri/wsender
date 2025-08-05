@@ -1,4 +1,5 @@
 #include "net.h"
+
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <stdlib.h>
@@ -59,13 +60,13 @@ int connect_to(Peer* peer){
 }
 
 
-int send_to(Peer* peer, char* message){
+int send_to(Peer* peer, String* message){
     int sockfd = connect_to(peer);
     if (sockfd < 0){
         return -1;
     }
 
-    int bytes_sent = send(sockfd, message, strlen(message), 0);
+    int bytes_sent = send(sockfd, to_c_string(message), message->size, 0);
     if (bytes_sent < 0) {
         perror("send failed");
         return -1;
@@ -117,8 +118,8 @@ void* accept_connections(void* arg){
             pthread_exit(NULL);
         }
 
-        buffer[n] = '\0';
-        printf("Received message: %s\n", buffer);    
+
+        printf("Received message: %s\n", to_c_string(new_s(buffer, n)));    
     }
 
 
