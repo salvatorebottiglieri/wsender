@@ -8,7 +8,7 @@
 #include "sep_string.h"
 const char *env;
 
-char* read_user_input(char* buffer){
+String* read_user_input(char* buffer){
     char c;
     size_t index = 0;
     do{
@@ -18,13 +18,15 @@ char* read_user_input(char* buffer){
         }
 
     }while(c != EOF && c != '\n');
-    buffer[index] = '\0';
-    return buffer;
+    String *s = new_s(buffer, index);
+    printf("User input: %s\n", to_c_string(s));
+    return s;
 }
 
 
 
 int main(int argc, char *argv[]) {
+    
     env = getenv("ENV");
     if (env != NULL) {
         printf("ENV is set to: %s\n", env);
@@ -64,14 +66,18 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
+    String *exit = new_s("exit", 4);
+    String *send = new_s("send", 4);
+
     while(1){
 
-        char* command = read_user_input(buffer);
-        if (strncmp(command, "exit",4) == 0){
+        String* user_input = read_user_input(buffer);
+        String* command = get_slice(user_input, 0, 4);
+        if (equal(command, exit)){
             printf("Exit command received\n");
             break;
         }
-        if (strncmp(command, "send", 4) == 0){
+        if (equal(command, send)){
             char* message = buffer + 5;
             printf("Sending message: %s\n", message);
             send_to(&receiver, message);
