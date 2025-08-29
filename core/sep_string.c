@@ -1,25 +1,33 @@
 #include "sep_string.h"
-#include <stdio.h>
 
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
 /**
  * Creates a new String object containing a copy of the given data.
+ * For compatibility with the C standard library, the size of the data
+ * comprises of the null terminator.
  * @param data The data to copy into the new String
- * @param size The size of the data to copy
+ * @param size The size of the data, NOT include the null terminator
  * @return A new String object containing a copy of the given data
  */
 String* new_s(const char* data, size_t size){
-    String* str = malloc(sizeof(String)+sizeof(char)*size);
+    String* str = malloc(sizeof(String)+(sizeof(char)*size)+1);
     str->data = (char*)str+sizeof(String);
     str->size = size;
     for (size_t i = 0; i < size; i++){
         str->data[i] = data[i];
     }
+    str->data[size+1] = '\0';
     return str;  
 }
 
 void delete_s(String* string){
+    free(string->data);
     free(string);
+    string = NULL;
 }
+
 
 /**
  * Returns a new String object that is a slice of the given String
@@ -39,15 +47,15 @@ void delete_s(String* string){
 
 String* get_slice(String* string, size_t start, size_t end){
     if (end > string->size){printf("Invalid end index\n"); return NULL;}
-    if (start > end){printf("Invalid start index\n"); return NULL;}
+    if (start > end || start < 0){printf("Invalid start index\n"); return NULL;}
 
-    String* new_string = (String*) malloc(sizeof(String)+sizeof(char)*(end-start));
-    if (new_string == NULL){perror("malloc failed");return NULL;}
+    String* new_string = (String*) malloc(sizeof(String)+sizeof(char)+(end-start+1));
+    if (new_string == NULL){perror("malloc  failed");return NULL;}
+    new_string->data = (char*) malloc(sizeof(char)*(end-start+1));
+    if (new_string->data == NULL){perror("malloc  failed");return NULL;}
 
-    new_string->data = (char*)new_string+sizeof(String);
-    for(size_t i = 0; i < end-start; i++){
-        new_string->data[i] = string->data[start+i];
-    }
+    memcpy(new_string->data, string->data+start, end-start); 
+    new_string->data[end-start] = '\0';
     new_string->size = end-start;
     return new_string;
 }
@@ -67,21 +75,21 @@ bool equal(String* string1, String* string2){
 }
 
 
-/**
- * Converts the given String object into a C-style string.
- * The returned string is dynamically allocated and must be freed
- * by the caller.
- *
- * @param string The String object to convert
- * @return A dynamically allocated C-style string containing the same data
- */
-char* to_c_string(String* string){
-    char* c_string = malloc(sizeof(char)*string->size+1);
-    if (c_string == NULL){perror("malloc failed");return NULL;}
+String** tokenize(String* buffer){
+    size_t start_index, end_index = 0;
+    while(!isspace(buffer->data[end_index])){end_index++;}
 
-    for (size_t i = 0; i < string->size; i++){
-        c_string[i] = string->data[i];
-    }
-    c_string[string->size] = '\0';
-    return c_string;
+
+
+}
+
+/**
+ * Calculates the size of the given String object in terms of C-style strings.
+ * This is the size of the String object plus one, to account for the null
+ * terminator.
+ * @param string The String object to calculate the size of
+ * @return the size of the given String object in terms of C-style strings
+ */
+size_t size_of_string(String* string){
+    return string->size +1;
 }

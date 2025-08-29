@@ -15,6 +15,7 @@
 
 
 #define LISTEN_PORT 8080
+#define SEND_BUFFER_SIZE 512
 
 /*------------------------------------------- HELPER FUNCTIONS ---------------------------------------------------- */
 bool is_valid(Peer* peer){
@@ -60,20 +61,28 @@ int connect_to(Peer* peer){
 }
 
 
-int send_to(Peer* peer, String* message){
-    int sockfd = connect_to(peer);
-    if (sockfd < 0){
-        return -1;
+size_t send_to(Peer* peer, char* data, size_t size){
+    char* buffer = data;
+    size_t num_of_sending = size;
+    size_t bytes_sended = 0; 
+
+
+    if (size > SEND_BUFFER_SIZE){
+        buffer = malloc(sizeof(char)*SEND_BUFFER_SIZE);
+        num_of_sending = size/SEND_BUFFER_SIZE;
     }
 
-    int bytes_sent = send(sockfd, to_c_string(message), message->size, 0);
-    if (bytes_sent < 0) {
-        perror("send failed");
-        return -1;
+    for (size_t i = 0; i < num_of_sending; i++){
+        ssize_t bytes_sent = send(peer->sockfd, buffer, SEND_BUFFER_SIZE, 0);
+        if (bytes_sent < 0) {
+            perror("send failed");
+            return -1;
+        }
+        bytes_sended += bytes_sent;
+        
     }
 
-    close(sockfd);
-    return bytes_sent;
+    return bytes_sended;
 }
 
 
@@ -88,8 +97,6 @@ void* accept_connections(void* arg){
     if (sockfd < 0){
         pthread_exit(NULL);
     }
-
-    bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port = htons(params->listen_port);
@@ -119,7 +126,7 @@ void* accept_connections(void* arg){
         }
 
 
-        printf("Received message: %s\n", to_c_string(new_s(buffer, n)));    
+        printf("Received message: %s\n", new_s(buffer, n)->data);    
     }
 
 

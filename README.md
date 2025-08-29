@@ -4,3 +4,5 @@ an application to send any type of data to whoever you want without relying on e
 
 
 ## Features
+
+  - [ ] Progress bar during transfer

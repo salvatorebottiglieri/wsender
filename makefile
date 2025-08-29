@@ -4,7 +4,7 @@
 CC = clang
 
 # Opzioni di compilazione
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -std=c99
 LDFLAGS = -lm
 
 # Flag di debug
