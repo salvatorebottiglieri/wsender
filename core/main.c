@@ -16,13 +16,12 @@ String* read_user_input(char* buffer){
     size_t index = 0;
     do{
         c = getchar();
-        if (c != EOF && c != '\n'){
+        if (c != EOF){
             buffer[index++] = c;
         }
 
     }while(c != EOF && c != '\n' && index < USER_INPUT_BUFFER_SIZE);
     String *s = new_s(buffer, index);
-    printf("User input: %s\n", s->data);
     return s;
 }
 
@@ -47,27 +46,33 @@ int get_port_number(char* argument){
 
 }
 
-String* get_command(char* buffer){
+String* get_command(String *buffer){
 
     size_t cursor = 0;
 
-
-    size_t start_index , end_index = -1;
-    while(!isspace(buffer[cursor++])){};
+    size_t start_index = 0 , end_index = 0;
+    while(isspace(buffer->data[cursor])){cursor++;};
     start_index = cursor;
-    while(!isspace(buffer[cursor++])){};
+    while(!isspace(buffer->data[cursor])){cursor++;};
     end_index = cursor;
 
-    String *command = new_s(buffer+start_index, end_index-start_index);
+    String *command = get_slice(buffer,start_index, end_index-start_index);
+
     return command;
     
 }
 
-String* get_command_arguments(String *command,char *buffer){
-
-    size_t start_index = 1;
-
+String* get_command_arguments(String *command, String *user_input){
+    size_t i = 0;
+    String** tokens = tokenize(user_input);
     
+    while(tokens[i] != 0){
+        size_t start_index = 1;
+        i++;
+    }
+    
+
+        
 }
 
 void clean_buffer(char* buffer){memset(buffer, 0, USER_INPUT_BUFFER_SIZE);}
@@ -109,12 +114,6 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
     char buffer[USER_INPUT_BUFFER_SIZE];
-
-    if (buffer == NULL){
-        printf("Memory allocation failed\n");
-        exit(-1);
-    }
-
     String *exit = new_s("exit", 4);
     String *send = new_s("send", 4);
     String *connect = new_s("connect", 7);
@@ -122,9 +121,12 @@ int main(int argc, char *argv[]) {
     while(1){
 
         String* user_input = read_user_input(buffer);
-        String* command = get_command(user_input->data);
+        String *command = get_command(user_input);
         if (equal(command, exit)){
             printf("Exit command received\n");
+            clean_buffer(buffer);
+            delete_s(user_input);
+            delete_s(command);
             break;
         }
         else if (equal(command, send)){
@@ -134,10 +136,9 @@ int main(int argc, char *argv[]) {
             delete_s(message);
         }
         else if (equal(command,connect)){
-            get_command_arguments(command,user_input);
+            get_command_arguments(command, user_input);
             
             
-            delete_s(command);
         }
         else {
             printf("Invalid command\n");

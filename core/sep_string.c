@@ -12,20 +12,29 @@
  * @return A new String object containing a copy of the given data
  */
 String* new_s(const char* data, size_t size){
-    String* str = malloc(sizeof(String)+(sizeof(char)*size)+1);
-    str->data = (char*)str+sizeof(String);
+    String* str = malloc(sizeof(String));
+    if (str == NULL) return NULL;
+    str->data = malloc(size+1);
+    if (str->data == NULL) {free(str); return NULL;}
     str->size = size;
     for (size_t i = 0; i < size; i++){
         str->data[i] = data[i];
     }
-    str->data[size+1] = '\0';
+    str->data[size] = '\0';
+    str->ref_count = 1;
     return str;  
 }
 
 void delete_s(String* string){
+    if (string == NULL){return;}
+    if (string->ref_count > 1) {
+        string->ref_count--;
+        return;
+    }
     free(string->data);
     free(string);
     string = NULL;
+    
 }
 
 
@@ -55,8 +64,9 @@ String* get_slice(String* string, size_t start, size_t end){
     if (new_string->data == NULL){perror("malloc  failed");return NULL;}
 
     memcpy(new_string->data, string->data+start, end-start); 
-    new_string->data[end-start] = '\0';
+    new_string->data[end] = '\0';
     new_string->size = end-start;
+    new_string->ref_count = 1;
     return new_string;
 }
 
@@ -75,21 +85,53 @@ bool equal(String* string1, String* string2){
 }
 
 
+/**
+ * Tokenizes a given String object by splitting it into multiple substrings
+ * separated by whitespace characters.
+ * We declare an array of pointers to strings with the size of the buffer:
+ * since we don't know the number of tokens that we will find but we know that in the
+ * worst case we will find the same number of tokens as the number of characters, so we
+ * allocate on the stack a buffer that can contain all the possible tokens and, at the end, 
+ * on the heap only the tokens that we have found. At the end of the function the memory
+ * occupied by the stack buffer will be freed automatically.
+ *
+ * @param buffer The String object to tokenize
+ * @return An array of String objects representing the individual tokens
+ */
 String** tokenize(String* buffer){
-    size_t start_index, end_index = 0;
-    while(!isspace(buffer->data[end_index])){end_index++;}
+    String** possible_tokens[buffer->size];
+    size_t i =0;
+    size_t start_token = 0, end_token = 0;
+    while(buffer->data[end_token] != '\n'){
+        while(isspace(buffer->data[start_token])){start_token++;}
+        end_token = start_token;
+        while(!isspace(buffer->data[end_token]) && buffer->data[end_token] != '\0'){end_token++;}
+        possible_tokens[i] = get_slice(buffer, start_token, end_token);
+        if (possible_tokens[i] == NULL){return NULL;}
+        String *tmp = possible_tokens[i];
+        i++;
+        start_token = end_token;
 
+    }
 
-
+    /* Allocate the memory needed for the number of tokens found plus one for a terminator
+        byte that will inform the caller where the list of tokens ends*/
+    String ** tokens = malloc(sizeof(String*)*i+1);
+    memcpy(tokens, possible_tokens, sizeof(String*)*(i));
+    tokens[sizeof(String*)*(i)+1] = 0;
+    return tokens;
 }
 
+
 /**
- * Calculates the size of the given String object in terms of C-style strings.
- * This is the size of the String object plus one, to account for the null
- * terminator.
- * @param string The String object to calculate the size of
- * @return the size of the given String object in terms of C-style strings
+ * Returns the size of the given String object.
+ * If include_terminator is set to true, the size of the null terminator is also included.
+ * @param string The String object to get the size of
+ * @param include_terminator Whether to include the null terminator in the size
+ * @return The size of the given String object
  */
-size_t size_of_string(String* string){
-    return string->size +1;
+size_t size_of_string(String* string,bool include_terminator){
+    size_t size = string->size;
+    if (include_terminator){size++;}
+    return string->size;
 }

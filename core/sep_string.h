@@ -7,7 +7,8 @@
 
 typedef struct{
     size_t size;    
-    char *data; 
+    char *data;
+    size_t ref_count;
 }String;
 
 
@@ -15,7 +16,7 @@ String* new_s(const char* data, size_t size);
 void delete_s(String* string);
 String* get_slice(String* string, size_t start, size_t end);
 bool equal(String* string1, String* string2);
-size_t size_of_string(String* string);
+size_t size_of_string(String* string,bool include_terminator);
 String** tokenize(String* buffer);
 
 #endif // STRING_H
