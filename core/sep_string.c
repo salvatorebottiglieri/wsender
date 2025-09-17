@@ -26,15 +26,12 @@ String* new_s(const char* data, size_t size){
 }
 
 void delete_s(String* string){
-    if (string == NULL){return;}
-    if (string->ref_count > 1) {
-        string->ref_count--;
-        return;
-    }
+    if (string == NULL) {return;}
+    if (string->ref_count > 1) {string->ref_count--;return;}
+
     free(string->data);
     free(string);
     string = NULL;
-    
 }
 
 
@@ -108,7 +105,6 @@ String** tokenize(String* buffer){
         while(!isspace(buffer->data[end_token]) && buffer->data[end_token] != '\0'){end_token++;}
         possible_tokens[i] = get_slice(buffer, start_token, end_token);
         if (possible_tokens[i] == NULL){return NULL;}
-        String *tmp = possible_tokens[i];
         i++;
         start_token = end_token;
 
@@ -131,7 +127,6 @@ String** tokenize(String* buffer){
  * @return The size of the given String object
  */
 size_t size_of_string(String* string,bool include_terminator){
-    size_t size = string->size;
-    if (include_terminator){size++;}
+    if (include_terminator){return string->size+1;}
     return string->size;
 }

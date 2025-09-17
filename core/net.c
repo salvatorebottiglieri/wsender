@@ -1,4 +1,5 @@
 #include "net.h"
+#include "sep_log.h"
 
 #include <stdbool.h>
 #include <sys/socket.h>
@@ -34,6 +35,13 @@ int create_socket(int domain){
     return sockfd;
 }
 
+int close_socket(int sockfd){
+    if (close(sockfd) < 0){
+        perror("close failed");
+        return -1;
+    }
+    return 0;
+}
 
 /*------------------------------------------- HELPER FUNCTIONS  ---------------------------------------------------- */
 
@@ -42,23 +50,27 @@ int connect_to(Peer* peer){
     if (is_valid(peer) == false){
         return -1;
     }
-
-    int sockfd = create_socket(AF_INET);
-    if (sockfd < 0){
+    struct sockaddr_in servaddr;
+    int socket = create_socket(AF_INET);
+    if (socket < 0){
         return -1;
     }
-
-    struct sockaddr_in servaddr;
+    peer->sockfd = socket;
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(peer->port);
     inet_pton(AF_INET, peer->ip, &(servaddr.sin_addr));
-    if(connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        perror("connection failed");
+    if(connect(peer->sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+        s_log(ERROR, "Failed to connect to peer: %s", peer->name);
+        close_socket(peer->sockfd);
+        peer->sockfd = -1;
         return -1;
     }
+    s_log(INFO, "Connection established to peer: %s", peer->name);
 
-    return sockfd;  
+    return peer->sockfd;  
 }
+
+
 
 
 size_t send_to(Peer* peer, char* data, size_t size){

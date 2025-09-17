@@ -30,6 +30,7 @@ typedef struct ConnectionParams_{
 
 int connect_to(Peer* peer);
 int is_alive(Peer* peer);
+bool are_connected(Peer* self, Peer* peer);
 size_t send_to(Peer* peer, char* data, size_t size);
 void* accept_connections(void* arg);
 
