@@ -53,7 +53,7 @@ void delete_s(String* string){
 
 String* get_slice(String* string, size_t start, size_t end){
     if (end > string->size){printf("Invalid end index\n"); return NULL;}
-    if (start > end || start < 0){printf("Invalid start index\n"); return NULL;}
+    if (start >= end || start < 0){printf("Invalid start index\n"); return NULL;}
 
     String* new_string = (String*) malloc(sizeof(String)+sizeof(char)+(end-start+1));
     if (new_string == NULL){perror("malloc  failed");return NULL;}
@@ -100,11 +100,13 @@ String** tokenize(String* buffer){
     size_t i =0;
     size_t start_token = 0, end_token = 0;
     while(buffer->data[end_token] != '\n'){
-        while(isspace(buffer->data[start_token])){start_token++;}
+        while(isspace(buffer->data[start_token]) && buffer->data[start_token] != '\0'){start_token++;}
         end_token = start_token;
         while(!isspace(buffer->data[end_token]) && buffer->data[end_token] != '\0'){end_token++;}
+        if (end_token == start_token){break;}
+        
         possible_tokens[i] = get_slice(buffer, start_token, end_token);
-        if (possible_tokens[i] == NULL){return NULL;}
+        if (possible_tokens[i] == NULL){for (size_t j = 0; j < i; j++){delete_s(possible_tokens[j]);}return NULL;}
         i++;
         start_token = end_token;
 
