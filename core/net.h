@@ -2,6 +2,8 @@
 #define NET_H
 
 #include <stdint.h>
+#include <sys/types.h>
+
 #include "sep_string.h"
 
 /**
@@ -31,7 +33,7 @@ typedef struct ConnectionParams_{
 int connect_to(Peer* peer);
 int is_alive(Peer* peer);
 bool are_connected(Peer* self, Peer* peer);
-size_t send_to(Peer* peer, char* data, size_t size);
+ssize_t send_to(Peer* peer, char* data, size_t size);
 void* accept_connections(void* arg);
 
 

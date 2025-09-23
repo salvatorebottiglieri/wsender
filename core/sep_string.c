@@ -54,8 +54,9 @@ void delete_s(String* string){
 String* get_slice(String* string, size_t start, size_t end){
     if (end > string->size){printf("Invalid end index\n"); return NULL;}
     if (start >= end || start < 0){printf("Invalid start index\n"); return NULL;}
+    String* new_string = NULL;
 
-    String* new_string = (String*) malloc(sizeof(String)+sizeof(char)+(end-start+1));
+    new_string = (String*) malloc(sizeof(String)+sizeof(char)+(end-start+1));
     if (new_string == NULL){perror("malloc  failed");return NULL;}
     new_string->data = (char*) malloc(sizeof(char)*(end-start+1));
     if (new_string->data == NULL){perror("malloc  failed");return NULL;}
@@ -117,6 +118,7 @@ String** tokenize(String* buffer){
     String ** tokens = malloc(sizeof(String*)*i+1);
     memcpy(tokens, possible_tokens, sizeof(String*)*(i));
     tokens[sizeof(String*)*(i)+1] = 0;
+
     return tokens;
 }
 

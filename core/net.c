@@ -46,6 +46,11 @@ int close_socket(int sockfd){
 /*------------------------------------------- HELPER FUNCTIONS  ---------------------------------------------------- */
 
 
+/**
+ * Establishes a connection to the given peer.
+ * @param peer The peer to connect to.
+ * @return The socket file descriptor of the connection, or -1 if the connection failed.
+ */
 int connect_to(Peer* peer){
     if (is_valid(peer) == false){
         return -1;
@@ -60,7 +65,6 @@ int connect_to(Peer* peer){
     servaddr.sin_port = htons(peer->port);
     inet_pton(AF_INET, peer->ip, &(servaddr.sin_addr));
     if(connect(peer->sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        s_log(ERROR, "Failed to connect to peer: %s", peer->name);
         close_socket(peer->sockfd);
         peer->sockfd = -1;
         return -1;
@@ -73,10 +77,10 @@ int connect_to(Peer* peer){
 
 
 
-size_t send_to(Peer* peer, char* data, size_t size){
+ssize_t send_to(Peer* peer, char* data, size_t size){
     char* buffer = data;
-    size_t num_of_sending = size;
-    size_t bytes_sended = 0; 
+    size_t num_of_sending = 1;
+    ssize_t bytes_sended = 0; 
 
 
     if (size > SEND_BUFFER_SIZE){
@@ -85,12 +89,12 @@ size_t send_to(Peer* peer, char* data, size_t size){
     }
 
     for (size_t i = 0; i < num_of_sending; i++){
-        ssize_t bytes_sent = send(peer->sockfd, buffer, SEND_BUFFER_SIZE, 0);
-        if (bytes_sent < 0) {
+        ssize_t chunk_sent = send(peer->sockfd, buffer, SEND_BUFFER_SIZE, 0);
+        if (chunk_sent < 0) {
             perror("send failed");
             return -1;
         }
-        bytes_sended += bytes_sent;
+        bytes_sended += chunk_sent;
         
     }
 

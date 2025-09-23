@@ -7,9 +7,13 @@
 
 #include "net.h"
 #include "sep_string.h"
+#include "sep_log.h"
+#include "sep_ui.h"
+
+
 const char *env;
 
-#define USER_INPUT_BUFFER_SIZE 256
+#define USER_INPUT_BUFFER_SIZE 1000
 
 String* read_user_input(char* buffer){
     char c;
@@ -62,20 +66,31 @@ String* get_command(String *buffer){
     
 }
 
-String* get_command_arguments(String *command, String *user_input){
-    size_t i = 0;
+String** get_command_and_arguments(String *user_input){
     String** tokens = tokenize(user_input);
-    
-    while(tokens[i] != 0){
-        size_t start_index = 1;
-        i++;
-    }
-    
+    return tokens;
+}
 
-        
+void clean_command_and_arguments(String** tokens){
+    for (size_t i = 0; tokens[i] != 0; i++){delete_s(tokens[i]);}
+    free(tokens);
 }
 
 void clean_buffer(char* buffer){memset(buffer, 0, USER_INPUT_BUFFER_SIZE);}
+
+
+int use_case_send_message(Peer* peer, String* message){
+
+    if (connect_to(peer) == -1){s_log(ERROR, "Failed to connect to peer: %s", peer->name) ;return -1;}
+
+    if (send_to(peer, message->data, message->size) == -1){s_log(ERROR, "Failed to send message to peer: %s", peer->name); return -1;}
+    
+
+    return 0;
+    
+}
+
+
 
 int main(int argc, char *argv[]) {
     print_info();
@@ -121,7 +136,9 @@ int main(int argc, char *argv[]) {
     while(1){
 
         String* user_input = read_user_input(buffer);
-        String *command = get_command(user_input);
+        String** result = get_command_and_arguments(user_input);
+        String* command = result[0];
+        String** arguments = &result[1];
         if (equal(command, exit)){
             printf("Exit command received\n");
             clean_buffer(buffer);
@@ -131,12 +148,15 @@ int main(int argc, char *argv[]) {
         }
         else if (equal(command, send)){
             String* message = get_slice(user_input, 5, user_input->size);
-            printf("Sending message: %s\n", message->data);
-            send_to(&receiver, message->data, message->size);
+
+            use_case_send_message(&receiver, message);
+
             delete_s(message);
         }
         else if (equal(command,connect)){
-            get_command_arguments(command, user_input);
+            printf("Connecting to %s\n", arguments[0]->data);
+
+            
             
             
         }
@@ -145,9 +165,8 @@ int main(int argc, char *argv[]) {
         }
 
         clean_buffer(buffer);
-        delete_s(user_input);
-        delete_s(command);
-        
+        clean_command_and_arguments(result);
+
 
     }
 
