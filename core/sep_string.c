@@ -1,4 +1,5 @@
 #include "sep_string.h"
+#include "sep_log.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -52,18 +53,19 @@ void delete_s(String* string){
  */
 
 String* get_slice(String* string, size_t start, size_t end){
-    if (end > string->size){printf("Invalid end index\n"); return NULL;}
-    if (start >= end || start < 0){printf("Invalid start index\n"); return NULL;}
+    if (end > string->size){s_log(ERROR,"Invalid end index\n"); return NULL;}
+    if (start >= end || start < 0){s_log(ERROR,"Invalid start index\n"); return NULL;}
     String* new_string = NULL;
+    size_t new_string_size = end-start;
 
-    new_string = (String*) malloc(sizeof(String)+sizeof(char)+(end-start+1));
-    if (new_string == NULL){perror("malloc  failed");return NULL;}
-    new_string->data = (char*) malloc(sizeof(char)*(end-start+1));
-    if (new_string->data == NULL){perror("malloc  failed");return NULL;}
+    new_string = (String*) malloc(sizeof(String));
+    if (new_string == NULL){s_log(ERROR,"malloc  failed");return NULL;}
+    new_string->data = (char*) malloc(sizeof(char)*(new_string_size+1));
+    if (new_string->data == NULL){s_log(ERROR,"malloc  failed");return NULL;}
 
     memcpy(new_string->data, string->data+start, end-start); 
-    new_string->data[end] = '\0';
-    new_string->size = end-start;
+    new_string->data[new_string_size] = '\0';
+    new_string->size = new_string_size;
     new_string->ref_count = 1;
     return new_string;
 }
@@ -117,7 +119,7 @@ String** tokenize(String* buffer){
         byte that will inform the caller where the list of tokens ends*/
     String ** tokens = malloc(sizeof(String*)*i+1);
     memcpy(tokens, possible_tokens, sizeof(String*)*(i));
-    tokens[sizeof(String*)*(i)+1] = 0;
+    tokens[i] = 0;
 
     return tokens;
 }
