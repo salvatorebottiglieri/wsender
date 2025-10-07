@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <regex.h>
 
 #include "net.h"
 #include "sep_string.h"
@@ -13,7 +14,7 @@
 
 const char *env;
 
-#define USER_INPUT_BUFFER_SIZE 1000
+#define USER_INPUT_BUFFER_SIZE 512
 
 String* read_user_input(char* buffer){
     char c;
@@ -72,24 +73,59 @@ String** get_command_and_arguments(String *user_input){
 }
 
 void clean_command_and_arguments(String** tokens){
-    for (size_t i = 0; tokens[i] != 0; i++){delete_s(tokens[i]);}
+    for (size_t i = 0; tokens[i] != 0; i++){
+        delete_s(tokens[i]);}
     free(tokens);
 }
 
 void clean_buffer(char* buffer){memset(buffer, 0, USER_INPUT_BUFFER_SIZE);}
 
 
-int use_case_send_message(Peer* peer, String* message){
+bool is_option(String* argument){
+    const char *file_option = "-f";
+    bool result =  equal_const(argument, file_option);
+    return result;
+}
+
+void take_option_argument(String *expression){
+    regex_t *regex = NULL;
+    regmatch_t matches[3];
+    const char *file_option_regex = "-f[[:space:]]*([^[:space:]]+)"; 
+    const char *string_to_match = expression->data;
+
+    if (regcomp(&regex,file_option_regex, REG_EXTENDED) != 0){s_log(ERROR, "Failed to compile regex"); return;}
+
+    if (regexec(&regex, string_to_match, 3, matches, 0) == 0){
+        printf("Matched: %s\n", string_to_match+matches[1].rm_so);
+        printf("Matched: %s\n", string_to_match+matches[2].rm_so);
+    }
+
+    regfree(&regex);
+
+}   
+
+int use_case_send_message(Peer* peer, String** tokens){
+    String* expression;
+
+    for (size_t i = 0; tokens[i] != 0; i++){
+        if  (is_option(tokens[i])){
+            expression = concat(tokens[i], tokens[i+1]);
+            
+            take_option_argument(expression);
+
+            delete_s(expression);
+        }
+    }
+
 
     if (connect_to(peer) == -1){s_log(ERROR, "Failed to connect to peer: %s", peer->name) ;return -1;}
 
-    if (send_to(peer, message->data, message->size) == -1){s_log(ERROR, "Failed to send message to peer: %s", peer->name); return -1;}
+    //if (send_to(peer, message->data, message->size) == -1){s_log(ERROR, "Failed to send message to peer: %s", peer->name); return -1;}
     
 
     return 0;
     
 }
-
 
 
 int main(int argc, char *argv[]) {
@@ -132,6 +168,8 @@ int main(int argc, char *argv[]) {
     String *exit = new_s("exit", 4);
     String *send = new_s("send", 4);
     String *connect = new_s("connect", 7);
+    
+    
 
     while(1){
 
@@ -142,16 +180,15 @@ int main(int argc, char *argv[]) {
         if (equal(command, exit)){
             printf("Exit command received\n");
             clean_buffer(buffer);
+            clean_command_and_arguments(result);
             delete_s(user_input);
-            delete_s(command);
             break;
         }
         else if (equal(command, send)){
-            String* message = get_slice(user_input, 5, user_input->size);
 
-            use_case_send_message(&receiver, message);
 
-            delete_s(message);
+            use_case_send_message(&receiver, arguments);
+
         }
         else if (equal(command,connect)){
             printf("Connecting to %s\n", arguments[0]->data);
@@ -166,6 +203,7 @@ int main(int argc, char *argv[]) {
 
         clean_buffer(buffer);
         clean_command_and_arguments(result);
+        delete_s(user_input);
 
 
     }

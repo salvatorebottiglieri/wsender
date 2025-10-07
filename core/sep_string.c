@@ -132,7 +132,89 @@ String** tokenize(String* buffer){
  * @param include_terminator Whether to include the null terminator in the size
  * @return The size of the given String object
  */
-size_t size_of_string(String* string,bool include_terminator){
+size_t size_s(String* string,bool include_terminator){
     if (include_terminator){return string->size+1;}
     return string->size;
+}
+
+
+/**
+ * Finds the first occurrence of the given sub_string in the given string.
+ * If the sub-string is not found, -1 is returned.
+ * @param string The string to search
+ * @param sub_string The sub-string to search for
+ * @return The index of the first occurrence of the sub-string in the string, or -1 if not found
+ */
+size_t find(String* string, String* sub_string){
+    size_t string_index = 0;
+    size_t sub_string_index = 0;
+    while (string_index < string->size){
+        if (string->data[string_index] == sub_string->data[sub_string_index]){
+            sub_string_index++;
+            if (sub_string_index == sub_string->size-1){
+                return string_index-sub_string->size;
+            }
+        }
+        else{
+            sub_string_index = 0;
+        }
+        string_index++;
+    }
+    return -1;
+}
+
+
+
+/**
+ * Appends the data of the second string to the first string.
+ * It allocates memory for the new string and copies the data from the second string.
+ * If the reallocation fails, an error message is printed and -1 is returned.
+ * @param string1 The first string object to append
+ * @param string2 The second string object to append
+ * @return 0 if successful, -1 if the reallocation failed
+ */
+int append(String* string1, String* string2){
+
+    if (realloc(string1->data, string1->size+string2->size) == NULL){
+        s_log(ERROR,"realloc failed");
+        return -1;
+    }
+
+    // copy data from string2 to string1, including the null terminator
+    memcpy(string1->data+string1->size, string2->data, string2->size+1);
+    string1->size += string2->size;
+    return 0;
+}
+
+
+/**
+ * Compares two String objects for equality.
+ * @param string1 The first String object to compare
+ * @param string2 The second String object to compare
+ * @return true if the two String objects are equal, false otherwise
+ */
+bool equal_const(String* string1, const char* string2){
+    if (string1->size != strlen(string2)){return false;}
+    for (size_t i = 0; i < string1->size; i++){
+        if (string1->data[i] != string2[i]){return false;}
+    }
+    return true;
+}
+
+
+
+/**
+ * Concatenates two String objects and returns a new String object containing the concatenated data.
+ * It allocates memory for the new string and copies the data from the first string.
+ * It then appends the data from the second string to the new string.
+ * If the reallocation fails, an error message is printed and NULL is returned.
+ * @param string1 The first String object to concatenate
+ * @param string2 The second String object to concatenate
+ * @return A new String object containing the concatenated data, or NULL if the reallocation failed
+ */
+String* concat(String* string1, String* string2){
+
+    String *result = new_s(string1->data, string1->size);
+    append(result, string2);
+    return result;
 }
