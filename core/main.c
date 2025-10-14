@@ -6,11 +6,10 @@
 #include <unistd.h>
 #include <regex.h>
 
-#include "net.h"
-#include "sep_string.h"
-#include "sep_log.h"
-#include "sep_ui.h"
-
+#include <sep_string.h>
+#include <sep_file.h>
+#include <sep_log.h>
+#include <sep_net.h>
 
 const char *env;
 
@@ -87,7 +86,9 @@ bool is_option(String* argument){
     return result;
 }
 
-void take_option_argument(String *expression){
+
+
+void take_option_argument_rgx(String *expression){
     regex_t *regex = NULL;
     regmatch_t matches[3];
     const char *file_option_regex = "-f[[:space:]]*([^[:space:]]+)"; 
@@ -104,21 +105,35 @@ void take_option_argument(String *expression){
 
 }   
 
+int use_case_send_file(Peer* peer, String* file_path){
+
+    SFile *file = s_open(file_path->data);
+
+    if (file == NULL){s_log(ERROR, "Failed to open file: %s", file_path->data); return -1;}
+
+    while(s_read(file) != 0){
+        send_to(peer, file->buffer, 512);
+    }
+    
+    
+}
+
 int use_case_send_message(Peer* peer, String** tokens){
-    String* expression;
+    String* argument;
+
+    
 
     for (size_t i = 0; tokens[i] != 0; i++){
-        if  (is_option(tokens[i])){
-            expression = concat(tokens[i], tokens[i+1]);
+        if (is_option(tokens[i])){
             
-            take_option_argument(expression);
+            argument = tokens[i+1];
+            use_case_send_file(peer, argument);
 
-            delete_s(expression);
         }
     }
 
 
-    if (connect_to(peer) == -1){s_log(ERROR, "Failed to connect to peer: %s", peer->name) ;return -1;}
+   
 
     //if (send_to(peer, message->data, message->size) == -1){s_log(ERROR, "Failed to send message to peer: %s", peer->name); return -1;}
     
@@ -185,7 +200,7 @@ int main(int argc, char *argv[]) {
             break;
         }
         else if (equal(command, send)){
-
+            
 
             use_case_send_message(&receiver, arguments);
 
@@ -193,7 +208,7 @@ int main(int argc, char *argv[]) {
         else if (equal(command,connect)){
             printf("Connecting to %s\n", arguments[0]->data);
 
-            
+            if (connect_to(&receiver) == -1){s_log(ERROR, "Failed to connect to peer: %s", receiver.name) ;continue;}
             
             
         }

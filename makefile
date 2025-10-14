@@ -5,7 +5,7 @@ CC = clang
 
 # Opzioni di compilazione
 CFLAGS = -Wall -Wextra -std=c99
-LDFLAGS = -lm
+LDFLAGS = -lm -lsep_net -lsep_log -lsep_file -lsep_string
 
 # Flag di debug
 ifdef DEBUG

@@ -1,10 +1,11 @@
 #include "cli.h"
 
 #include <stdio.h>
+#include <string.h>
 
 typedef void (*func_ptr)(void*);
 
-void * file_handler(void* arg){
+void file_handler(void* arg){
     printf("File handler called\n");
 }
 
@@ -30,4 +31,5 @@ OptionHandler *init(int argc, char* argv[]){
     op_handler->handler = handlers_factory(op_handler->option);
     return op_handler;
 }
+
 

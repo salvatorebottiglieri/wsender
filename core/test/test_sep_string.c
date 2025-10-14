@@ -1,6 +1,6 @@
-#include "../sep_string.h"
 #include <stdio.h>
 #include <assert.h>
+#include <sep_string.h>
 
 void test_should_get_slice_return_null_when_end_index_size_is_greater_than_string_size(void){
     size_t end_index = 12;
